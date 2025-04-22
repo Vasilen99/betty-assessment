@@ -1,41 +1,24 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./style.css";
-
-type Image = {
-  download_url: string;
-};
+import { Image } from "../../types";
 
 type CarouselProps = {
   items: Image[] | undefined;
-  autoPlay?: boolean;
-  autoPlayInterval?: number;
+  setImageIndex: (image: number) => void;
 };
 
-const Carousel: React.FC<CarouselProps> = ({
-  items,
-  autoPlay = false,
-  autoPlayInterval = 3000,
-}) => {
+const Carousel: React.FC<CarouselProps> = ({ items, setImageIndex }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isScrollActive, setIsScrollActive] = useState<boolean>(false);
 
-  const realLength = items ? items.length : 0;
+  //Real Lenght of items is the extended lenght minus the first and last cloned items.
+  const realLength = items?.length ? items.length - 2 : 0;
 
-  console.log(items)
-
-  const extendedItems = items
-    ? [
-        items[items.length - 1], // clone last
-        ...items,
-        items[0], // clone first
-      ]
-    : [];
-
- // Set initial scroll position to the first real slide
- useEffect(() => {
+  // Set initial scroll position to the first real slide
+  useEffect(() => {
     const container = containerRef.current;
     if (container) {
       const slideWidth = container.clientWidth;
-      console.log(slideWidth)
       container.scrollLeft = slideWidth;
     }
   }, [containerRef.current]);
@@ -48,58 +31,56 @@ const Carousel: React.FC<CarouselProps> = ({
     const handleScroll = () => {
       const slideWidth = container.clientWidth;
       const index = Math.round(container.scrollLeft / slideWidth);
-
-      if (index === 0) {
+      const shouldScroll = container.scrollLeft % slideWidth === 0;
+      if (index === 0 && shouldScroll) {
         // Snap to last real item
-        container.style.scrollBehavior = 'auto';
-        container.scrollLeft = slideWidth * realLength;
-        requestAnimationFrame(() => {
-          container.style.scrollBehavior = 'smooth';
-        });
+        setTimeout(() => {
+          container.style.scrollBehavior = "auto";
+          container.scrollLeft = slideWidth * realLength;
+        }, 150);
       }
-
-      if (index === realLength + 1) {
+      if (index === realLength + 1 && shouldScroll) {
         // Snap to first real item
-        container.style.scrollBehavior = 'auto';
-        container.scrollLeft = slideWidth;
-        requestAnimationFrame(() => {
-          container.style.scrollBehavior = 'smooth';
-        });
+        container.style.scrollBehavior = "auto";
+        setTimeout(() => {
+          container.scrollLeft = slideWidth;
+        }, 150);
       }
+      setImageIndex(index);
     };
 
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [realLength]);
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [realLength, containerRef.current]);
 
-  useEffect(() => {
-    if (!autoPlay) return;
-
-    const container = containerRef.current;
-    if (!container) return;
-
-    const interval = setInterval(() => {
-      container.scrollBy({ left: container.clientWidth, behavior: "smooth" });
-    }, autoPlayInterval);
-
-    return () => clearInterval(interval);
-  }, [autoPlay, autoPlayInterval]);
-
-  if(!items) return <div>loading ...</div>
+  if (!items?.length) return <div>loading ...</div>;
 
   return (
-    <div className="carousel-grid" ref={containerRef}>
-      {extendedItems.map((item, index) => (
-        <div className="carousel-cell" key={index}>
-          <img
-            src={item.download_url}
-            loading="lazy"
-            alt="carousel image"
-            width={200}
-            height={200}
-          />
-        </div>
-      ))}
+    <div className="carousel-wrapper">
+      <div
+        className={`carousel-grid ${isScrollActive && "scrollable"}`}
+        ref={containerRef}
+      >
+        {items.map((item, index) => (
+          <div className="carousel-cell" key={index}>
+            <img
+              src={item.download_url}
+              alt="carousel image"
+              loading="lazy"
+              width={200}
+              height={300}
+            />
+          </div>
+        ))}
+      </div>
+      <div>
+        <button
+          onClick={() => setIsScrollActive((prev) => !prev)}
+          className="manage-scroll-button"
+        >
+          {isScrollActive ? "Show" : "Hide"} scroll
+        </button>
+      </div>
     </div>
   );
 };
