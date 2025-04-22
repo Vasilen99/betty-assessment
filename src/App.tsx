@@ -1,39 +1,94 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import Carousel from "./components/Carousel/indes";
-
-const LIMITS_OF_IMAGES = [2, 5, 10, 30, 60, 100];
+import { LIMITS_OF_IMAGES } from "./utils/constants";
+import { Image } from "./types";
+import NotFound from "./components/NotFount";
 
 function App() {
-  const [images, setImages] = useState();
-  const [limit, setLimit] = useState(5);
+  const [images, setImages] = useState<Image[]>([]);
+  const [limit, setLimit] = useState<number>(10);
+  const [fetchedPagesOfImages, setFetchedPagesOfImages] = useState(1);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(1);
 
+  const fetchImages = async (page: number, limit: number) => {
+    try {
+      const response = await fetch(
+        `https://picsum.photos/v2/list?page=${page}&limit=${limit}`
+      );
+      return await response.json();
+    } catch (err) {
+      console.error("Error fetching images:", err);
+      return [];
+    }
+  };
+
+  // Initial fetch when limit changes
   useEffect(() => {
-    const fetchImages = async () => {
-      try {
-        const response = await fetch(
-          `https://picsum.photos/v2/list?limit=${limit}`
-        );
-        const data = await response.json();
-        setImages(data);
-      } catch (err) {
-        console.error(err);
-      }
+    const loadInitialImages = async () => {
+      const initialData = await fetchImages(1, limit);
+      setImages(initialData);
+      setFetchedPagesOfImages(1); // reset pages
     };
-
-    fetchImages();
+    loadInitialImages();
   }, [limit]);
 
+  useEffect(() => {
+    const totalFetchedImages = images.length;
+    const imagesPerPage = 100;
+    const shouldTriggerFetch =
+      currentImageIndex >= totalFetchedImages - 2 && // approaching end
+      limit > 100 &&
+      images.length < limit;
+
+    if (shouldTriggerFetch) {
+      const expectedPage = Math.floor(totalFetchedImages / imagesPerPage) + 1;
+
+      if (expectedPage > fetchedPagesOfImages) {
+        const loadMoreImages = async () => {
+          const newImages = await fetchImages(expectedPage, imagesPerPage);
+          setImages((prev) => [...prev, ...newImages]);
+          setFetchedPagesOfImages(expectedPage);
+        };
+        loadMoreImages();
+      }
+    }
+  }, [currentImageIndex, images, fetchedPagesOfImages, limit]);
+
+  const extendedItems = images.length
+    ? [
+        images[images.length - 1], // clone last
+        ...images,
+        images[0], // clone first
+      ]
+    : [];
+
+  if (!images.length) return <NotFound />;
+
   return (
-    <div>
-      {LIMITS_OF_IMAGES.map((singleLimit) => (
-        <button onClick={() => setLimit(singleLimit)}>
-          {" "}
-          {singleLimit} Images
-        </button>
-      ))}
-      <Carousel items={images} />
-    </div>
+    <>
+      <h2 className="text-black filters-label">Select Number of Images</h2>
+      <div className="buttons-grid">
+        {LIMITS_OF_IMAGES.map((singleLimit) => (
+          <button
+            className={`limit-button ${
+              singleLimit === limit && "active-limit"
+            }`}
+            key={singleLimit}
+            onClick={() => setLimit(singleLimit)}
+          >
+            {" "}
+            {singleLimit} Images
+          </button>
+        ))}
+      </div>
+      <p className="text-black">or</p>
+      <button onClick={() => setImages([])}>Remove all images</button>
+      <Carousel
+        items={extendedItems}
+        setImageIndex={(index: number) => setCurrentImageIndex(index)}
+      />
+    </>
   );
 }
 
