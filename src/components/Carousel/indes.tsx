@@ -1,11 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./style.css";
-import { Image } from "../../types";
-
-type CarouselProps = {
-  items: Image[] | undefined;
-  setImageIndex: (image: number) => void;
-};
+import { CarouselProps } from "../../types";
 
 const Carousel: React.FC<CarouselProps> = ({ items, setImageIndex }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -68,7 +63,7 @@ const Carousel: React.FC<CarouselProps> = ({ items, setImageIndex }) => {
               alt="carousel image"
               loading="lazy"
               width={200}
-              height={300}
+              height={200}
             />
           </div>
         ))}
@@ -76,7 +71,7 @@ const Carousel: React.FC<CarouselProps> = ({ items, setImageIndex }) => {
       <div>
         <button
           onClick={() => setIsScrollActive((prev) => !prev)}
-          className="manage-scroll-button"
+          className="primary-button manage-scroll-button"
         >
           {isScrollActive ? "Show" : "Hide"} scroll
         </button>

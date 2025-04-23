@@ -4,24 +4,13 @@ import Carousel from "./components/Carousel/indes";
 import { LIMITS_OF_IMAGES } from "./utils/constants";
 import { Image } from "./types";
 import NotFound from "./components/NotFount";
+import { fetchImages } from "./api";
 
 function App() {
   const [images, setImages] = useState<Image[]>([]);
   const [limit, setLimit] = useState<number>(10);
   const [fetchedPagesOfImages, setFetchedPagesOfImages] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(1);
-
-  const fetchImages = async (page: number, limit: number) => {
-    try {
-      const response = await fetch(
-        `https://picsum.photos/v2/list?page=${page}&limit=${limit}`
-      );
-      return await response.json();
-    } catch (err) {
-      console.error("Error fetching images:", err);
-      return [];
-    }
-  };
 
   // Initial fetch when limit changes
   useEffect(() => {
@@ -71,7 +60,7 @@ function App() {
       <div className="buttons-grid">
         {LIMITS_OF_IMAGES.map((singleLimit) => (
           <button
-            className={`limit-button ${
+            className={`primary-button ${
               singleLimit === limit && "active-limit"
             }`}
             key={singleLimit}
@@ -83,7 +72,9 @@ function App() {
         ))}
       </div>
       <p className="text-black">or</p>
-      <button onClick={() => setImages([])}>Remove all images</button>
+      <button className="primary-button" onClick={() => setImages([])}>
+        Remove all images
+      </button>
       <Carousel
         items={extendedItems}
         setImageIndex={(index: number) => setCurrentImageIndex(index)}
