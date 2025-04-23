@@ -8,7 +8,6 @@
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     max-width: 300px;
-
   }
 
   .scrollable { 
@@ -25,12 +24,13 @@
     height: 300px;
   }
 
-
   .carousel-cell img {
     border-radius: 20px;
     -webkit-box-shadow: 1px 18px 32px -14px rgba(0,0,0,0.66);
     -moz-box-shadow: 1px 18px 32px -14px rgba(0,0,0,0.66);
     box-shadow: 1px 18px 32px -14px rgba(0,0,0,0.66);
+    height: 200px;
+    width: 200px;
   }
 
   .manage-scroll-button { 
